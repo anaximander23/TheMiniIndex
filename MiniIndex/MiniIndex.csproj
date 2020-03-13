@@ -26,7 +26,7 @@
     <PackageReference Include="Lamar" Version="4.1.0" />
     <PackageReference Include="Lamar.Microsoft.DependencyInjection" Version="4.1.0" />
     <PackageReference Include="MediatR" Version="8.0.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.12.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.13.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="3.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
