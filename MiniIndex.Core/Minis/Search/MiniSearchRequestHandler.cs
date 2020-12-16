@@ -30,7 +30,7 @@ namespace MiniIndex.Minis.Handlers
                 .OrderByDescending(m => m.ApprovedTime)
                     .ThenByDescending(m => m.ID);
 
-            if(request.Creator!=null && request.Creator.ID > 0)
+            if (request.Creator != null && request.Creator.ID > 0)
             {
                 search = search.Where(m => m.Creator == request.Creator);
             }
@@ -39,7 +39,7 @@ namespace MiniIndex.Minis.Handlers
                 //If we're searching by creator, show all their minis not just approved or pending
                 if (request.Tags.Count() == 0)
                 {
-                    search = search.Where(m => (m.Status == Status.Approved || m.Status == Status.Pending));
+                    search = search.Where(m => m.Status == Status.Approved || m.Status == Status.Pending);
                 }
                 else
                 {
@@ -75,19 +75,26 @@ namespace MiniIndex.Minis.Handlers
 
                 foreach (var term in searchTerms)
                 {
-                    search = search
+                    var perfectWordMatchSearch = search
                         .Where(m => m.Name.Contains(term))
-                        .OrderByDescending(m => m.Name.ToUpper().Equals(term))              // match where the term *is* the model name
-                        .ThenByDescending(m => m.Name.ToUpper().StartsWith($"{term} "))     // \
-                        .ThenByDescending(m => m.Name.ToUpper().Contains($" {term} "))      // -- these three lines do whole-word matching; there's a more concise way, but not if we want it to translate to SQL
-                        .ThenByDescending(m => m.Name.ToUpper().EndsWith($" {term}"))       // /
-                        .ThenBy(m => m.Name.ToUpper().IndexOf(term))                        // the earlier our term appears in the name, the more likely it is to be relevant (particularly with substring matches)
+                        .OrderByDescending(m => m.Name.ToUpper().Equals(term)); // match where the term *is* the model name
+
+                    var closestWordMatchSearch = perfectWordMatchSearch
+                        .ThenByDescending(m => m.Name.ToUpper()
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries)  //find words...
+                            .Where(w => w.Contains(term))                       //...which contain the search term...
+                            .Min(x => x.Length));                               //...and prioritise the shortest (ie. fewest extra letters, and therefore closest match)
+
+                    var termAppearsEarlierSearch = closestWordMatchSearch
+                        .ThenBy(m => m.Name.ToUpper().IndexOf(term))            // the earlier our term appears in the name, the more likely it is to be relevant (particularly with substring matches)
                         .ThenByDescending(m => m.ApprovedTime)
                         .ThenBy(m => m.Name);
 
+                    search = termAppearsEarlierSearch;
+
                     //Lots of people are trying to search only with one or two words that really should just be tag searches
                     //If there's no tags passed, this try to do a tag search in addition to the text-based search
-                    if(request.Tags.Count() == 0)
+                    if (request.Tags.Count() == 0)
                     {
                         tagSearch = tagSearch
                             .Where(m => m.MiniTags
